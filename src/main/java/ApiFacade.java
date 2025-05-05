@@ -1,22 +1,19 @@
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
+
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 public class ApiFacade {
 
-    public String getAttributeValueFromJson(String urlString, String attributeName) throws IllegalArgumentException, IOException {
+    public String getAttributeValueFromJson(String urlString, String attributePath) throws IllegalArgumentException, IOException {
         try {
             String json = getJsonFromApi(urlString);
-            return extractAttributeFromJson(json, attributeName);
-        } catch (MalformedURLException e) {
-            throw new IOException("Invalid URL: " + e.getMessage(), e);
+            return extractNestedAttribute(json, attributePath);
         } catch (ParseException e) {
             throw new IOException("Failed to parse JSON: " + e.getMessage(), e);
         }
@@ -39,15 +36,24 @@ public class ApiFacade {
         }
     }
 
-    private String extractAttributeFromJson(String json, String attributeName) throws ParseException {
+    private String extractNestedAttribute(String json, String path) throws ParseException {
         JSONParser parser = new JSONParser();
         JSONObject jsonObject = (JSONObject) parser.parse(json);
 
-        if (!jsonObject.containsKey(attributeName)) {
-            throw new IllegalArgumentException("Attribute not found in JSON: " + attributeName);
+        String[] keys = path.split("\\.");
+        Object current = jsonObject;
+
+        for (String key : keys) {
+            if (!(current instanceof JSONObject)) {
+                throw new IllegalArgumentException("Invalid path: " + path);
+            }
+            JSONObject obj = (JSONObject) current;
+            if (!obj.containsKey(key)) {
+                throw new IllegalArgumentException("Attribute not found: " + key);
+            }
+            current = obj.get(key);
         }
 
-        Object value = jsonObject.get(attributeName);
-        return value != null ? value.toString() : null;
+        return current != null ? current.toString() : null;
     }
 }

@@ -13,8 +13,8 @@ public class FacadeDemo {
 
         // 2. Get exchange rate for EUR to USD
         try {
-            String rate = apiFacade.getAttributeValueFromJson("https://open.er-api.com/v6/latest/EUR", "rates");
-            System.out.println("Exchange Rates JSON (partial): " + rate.substring(0, 100) + "...");
+            String usdRate = apiFacade.getAttributeValueFromJson("https://open.er-api.com/v6/latest/EUR", "rates.USD");
+            System.out.println("EUR to USD exchange rate: " + usdRate);
         } catch (Exception e) {
             System.err.println("Failed to get exchange rate: " + e.getMessage());
         }
